@@ -1,0 +1,592 @@
+git status - показывает последние изменения.
+git log --oneline - показывает короткую историю коммитов: хеш, сообщение, ветки.
+git diff - показывает, что именно изменилось в файлах, но ещё не добавлено в staging.
+git add . - добавляет изменения из текущей папки в staging area — то есть выбирает, что попадёт в следующий коммит.
+git commit -m "..." - создаёт коммит — сохранённый снимок всех файлов из staging area. У коммита появляются хеш, автор, дата и сообщение.
+git push - отправляет твои локальные коммиты в удалённый репозиторий — обычно GitHub или GitLab.
+git pull - скачивает новые коммиты с GitHub и вливает их в твою текущую ветку.
+git switch -c feature/имя - создаёт новую ветку и сразу переключается на неё.
+git switch main - переключает тебя на ветку main.
+git merge feature/имя - вливает изменения из ветки feature/model-training в ветку, на которой ты сейчас находишься — здесь в main.
+git restore file.py - отменяет незакоммиченные изменения в конкретном файле и возвращает его к последнему коммиту.
+git restore --staged file.py - убирает файл из staging area, но оставляет твои изменения в файле.
+git revert <hash> - создаёт новый коммит, который отменяет изменения указанного старого коммита.
+git stash - временно прячет твои незакоммиченные изменения и возвращает рабочую папку к состоянию последнего коммита.
+git stash pop - возвращает последний спрятанный набор изменений в текущую ветку и удаляет его из списка stash.
+
+
+
+
+######## Полный текст:
+
+
+Ниже — каждая команда как «что делает → когда использовать → что произойдёт». Это твой основной Git-набор: сначала смотришь состояние, потом готовишь изменения, коммитишь, отправляешь/получаешь, работаешь с ветками и исправляешь ошибки.
+
+1. git status
+bash
+git status
+Что делает: показывает текущее состояние репозитория: какие файлы изменены, какие новые, какие уже добавлены в staging area и есть ли что отправить на GitHub.
+
+Когда использовать: почти перед каждым действием. Это твой «приборная панель».
+
+Пример вывода:
+
+text
+On branch main
+Changes not staged for commit:
+        modified:   train.py
+
+Untracked files:
+        preprocessing.py
+
+Changes to be committed:
+        modified:   requirements.txt
+Расшифровка:
+
+modified: train.py — файл изменился, но ещё не добавлен через git add.
+
+Untracked files: preprocessing.py — новый файл, Git о нём пока не знает.
+
+Changes to be committed: requirements.txt — файл уже в staging и попадёт в следующий коммит.
+
+Практика: после правок всегда начинай с:
+
+bash
+git status
+Так ты понимаешь, что именно собираешься коммитить.
+
+2. git log --oneline
+bash
+git log --oneline
+Что делает: показывает короткую историю коммитов: хеш, сообщение, ветки.
+
+Пример:
+
+text
+a1b2c3d Добавил preprocessing данных
+e4f5g6h Создал baseline-модель
+i7j8k9l Первый коммит
+Когда использовать:
+
+найти хеш коммита для git revert, git show, git cherry-pick;
+
+понять, что уже сделано;
+
+проверить, есть ли твои коммиты перед push.
+
+Полезные варианты:
+
+bash
+git log --oneline --graph --all
+git log --oneline -5
+git log -- file.py
+--graph — рисует ветки и merge.
+
+--all — показывает все ветки.
+
+-5 — только последние 5 коммитов.
+
+-- file.py — история изменений конкретного файла.
+
+Практика: перед откатом:
+
+bash
+git log --oneline
+git revert a1b2c3d
+3. git diff
+bash
+git diff
+Что делает: показывает, что именно изменилось в файлах, но ещё не добавлено в staging.
+
+Пример:
+
+diff
+- model = LogisticRegression()
++ model = RandomForestClassifier()
+Это значит: строка с LogisticRegression удалена, вместо неё добавлен RandomForestClassifier.
+
+Когда использовать: перед git add, чтобы убедиться, что ты не закоммитишь случайный дебаг, пароль или лишний файл.
+
+Варианты:
+
+bash
+git diff
+git diff --staged
+git diff HEAD
+git diff main..feature/model
+Команда	Что показывает
+git diff	Неподготовленные изменения
+git diff --staged	Что уже добавлено через git add и попадёт в коммит
+git diff HEAD	Все изменения относительно последнего коммита
+git diff main..feature/model	Разницу между двумя ветками
+Практика:
+
+bash
+git status
+git diff
+git add .
+git diff --staged
+git commit -m "Заменил модель на RandomForest"
+4. git add .
+bash
+git add .
+Что делает: добавляет изменения из текущей папки в staging area — то есть выбирает, что попадёт в следующий коммит.
+
+Важно: git add не создаёт коммит. Он только готовит изменения.
+
+text
+Файл изменён → git add → файл готов к коммиту → git commit → изменение сохранено
+Когда использовать: когда ты проверил git status и git diff и готов сохранить изменения.
+
+Варианты:
+
+bash
+git add train.py
+git add data/
+git add .
+git add -A
+Команда	Что добавляет
+git add train.py	Только один файл
+git add data/	Всю папку
+git add .	Все изменения в текущей папке и ниже
+git add -A	Все изменения по всему репозиторию
+Осторожно: git add . может добавить ненужное: .env, большие датасеты, модели, временные файлы. Поэтому в проекте должен быть .gitignore.
+
+Практика: если добавил лишнее:
+
+bash
+git restore --staged файл
+Это уберёт файл из staging, но не удалит твои правки.
+
+5. git commit -m "..."
+bash
+git commit -m "Добавил очистку данных"
+Что делает: создаёт коммит — сохранённый снимок всех файлов из staging area. У коммита появляются хеш, автор, дата и сообщение.
+
+Когда использовать: после того, как ты добавил изменения через git add и проверил их.
+
+Что важно в сообщении:
+
+пиши что сделано, а не «fix», «update», «изменения»;
+
+одно логическое изменение — один коммит;
+
+сообщение в настоящем времени или как завершённое действие.
+
+Хорошие примеры:
+
+bash
+git commit -m "Добавил обработку пропущенных значений"
+git commit -m "Добавил logistic regression baseline"
+git commit -m "Исправил ошибку в валидации модели"
+Плохие примеры:
+
+bash
+git commit -m "fix"
+git commit -m "123"
+git commit -m "изменения"
+Практика:
+
+bash
+git status
+git diff
+git add .
+git commit -m "Добавил preprocessing и baseline-модель"
+git push
+git commit -m "message" — стандартный способ создать коммит с сообщением прямо из терминала.
+
+6. git push
+bash
+git push
+Что делает: отправляет твои локальные коммиты в удалённый репозиторий — обычно GitHub или GitLab.
+
+Когда использовать: после коммита, когда хочешь сохранить работу в облаке, поделиться ею или открыть Pull Request.
+
+Важно: git push отправляет только уже созданные коммиты. Если ты изменил файл, но не сделал git commit, push ничего не отправит.
+
+Первый push новой ветки
+bash
+git push -u origin feature/model-training
+origin — имя удалённого репозитория.
+
+feature/model-training — имя ветки.
+
+-u — связывает локальную ветку с удалённой; после этого достаточно git push.
+
+Обычный push
+bash
+git add .
+git commit -m "Добавил feature engineering"
+git push
+Когда не сработает: если на GitHub уже есть коммиты, которых нет у тебя. Тогда сначала:
+
+bash
+git pull
+7. git pull
+bash
+git pull
+Что делает: скачивает новые коммиты с GitHub и вливает их в твою текущую ветку.
+
+Технически:
+
+text
+git pull = git fetch + git merge
+git fetch — скачать изменения.
+
+git merge — влить их в текущую ветку.
+
+Когда использовать:
+
+в начале рабочего дня;
+
+перед созданием новой ветки;
+
+перед push, если GitHub говорит, что у тебя устаревшая ветка;
+
+когда коллега или ты с другого компьютера что-то запушил.
+
+Типичный сценарий
+bash
+git switch main
+git pull
+git switch -c feature/preprocessing
+Сначала обновил main, потом создал от него новую ветку.
+
+Если возник конфликт
+Git остановится и покажет конфликтные файлы. Ты вручную выбираешь итоговый код, затем:
+
+bash
+git add файл
+git commit
+git push
+8. git switch -c feature/имя
+bash
+git switch -c feature/model-training
+Что делает: создаёт новую ветку и сразу переключается на неё.
+
+git switch — переключение между ветками.
+
+-c — create, то есть создать новую ветку.
+
+feature/model-training — имя ветки.
+
+Когда использовать: когда начинаешь новую задачу: preprocessing, обучение модели, API, исправление бага.
+
+Сценарий
+bash
+git switch main
+git pull
+git switch -c feature/model-training
+
+# работаешь
+git add .
+git commit -m "Добавил обучение модели"
+git push -u origin feature/model-training
+Зачем это нужно: ты не трогаешь main, пока экспериментируешь. Если модель оказалась плохой или код сломался, main остаётся рабочим.
+
+Полезные варианты
+bash
+git switch main
+git switch feature/model-training
+git switch -c fix/validation-bug
+Команда	Что делает
+git switch main	Переключиться на существующую main
+git switch feature/model-training	Переключиться на существующую feature-ветку
+git switch -c fix/validation-bug	Создать и переключиться на новую ветку
+Git обновляет рабочие файлы под выбранную ветку; если несохранённые изменения конфликтуют с другой веткой, он может отказаться переключаться, чтобы не потерять твою работу.
+
+9. git switch main
+bash
+git switch main
+Что делает: переключает тебя на ветку main.
+
+Когда использовать:
+
+перед созданием новой ветки;
+
+чтобы посмотреть актуальную основную версию проекта;
+
+чтобы влить в main готовую feature-ветку;
+
+чтобы начать новую задачу с чистой базы.
+
+Сценарий: начать новую задачу
+bash
+git switch main
+git pull
+git switch -c feature/new-api
+Сценарий: влить готовую ветку
+bash
+git switch main
+git pull
+git merge feature/model-training
+git push
+Важно: git switch main не удаляет твою feature-ветку. Она остаётся, и ты можешь вернуться на неё в любой момент:
+
+bash
+git switch feature/model-training
+10. git merge feature/имя
+bash
+git switch main
+git merge feature/model-training
+Что делает: вливает изменения из ветки feature/model-training в ветку, на которой ты сейчас находишься — здесь в main.
+
+Главное правило: ты должен стоять в ветке, куда вливаешь изменения.
+
+text
+Ты в main
+git merge feature/model-training
+→ изменения из feature/model-training попадают в main
+Когда использовать:
+
+когда задача в feature-ветке готова;
+
+когда хочешь добавить изменения из main в свою ветку;
+
+когда разрешаешь историю вручную без Pull Request.
+
+Полный сценарий
+bash
+git switch main
+git pull
+git merge feature/model-training
+git push
+Если конфликт
+bash
+git merge feature/model-training
+# CONFLICT
+Открываешь файл, исправляешь, затем:
+
+bash
+git add файл
+git commit
+git push
+Если передумал:
+
+bash
+git merge --abort
+merge объединяет историю двух веток; при необходимости Git создаёт merge-коммит.
+
+11. git restore file.py
+bash
+git restore train.py
+Что делает: отменяет незакоммиченные изменения в конкретном файле и возвращает его к последнему коммиту.
+
+Когда использовать: когда ты что-то поменял, понял, что это неправильно, и хочешь вернуть файл как был.
+
+Пример
+Ты изменил train.py, но всё сломал:
+
+bash
+git status
+git restore train.py
+git status
+После git restore train.py файл снова будет таким, каким был в последнем коммите.
+
+Осторожно: это необратимо для несохранённых изменений. Если ты ещё не коммитил и не делал stash, правки пропадут.
+
+Отменить все незакоммиченные изменения
+bash
+git restore .
+Это опаснее: вернёт к последнему коммиту все изменённые файлы в текущей папке.
+
+
+12. git restore --staged file.py
+bash
+git restore --staged train.py
+Что делает: убирает файл из staging area, но оставляет твои изменения в файле.
+
+Разница:
+
+text
+git restore file.py          → отменить сами изменения
+git restore --staged file.py → убрать файл из будущего коммита, изменения остаются
+Сценарий
+Ты случайно добавил лишний файл:
+
+bash
+git add .
+git status
+git restore --staged secrets.env
+Теперь secrets.env не попадёт в коммит, но файл останется у тебя на диске.
+
+Другой сценарий
+Ты добавил два файла, но хочешь сделать два отдельных коммита:
+
+bash
+git add .
+git restore --staged train.py
+git commit -m "Обновил requirements"
+git add train.py
+git commit -m "Обновил обучение модели"
+13. git revert <hash>
+bash
+git log --oneline
+git revert a1b2c3d
+Что делает: создаёт новый коммит, который отменяет изменения указанного старого коммита.
+
+Это не «удаление коммита из истории». История сохраняется:
+
+text
+a1b2c3d Добавил плохую модель
+b2c3d4e Revert "Добавил плохую модель"
+Когда использовать:
+
+коммит уже отправлен на GitHub;
+
+с веткой работают другие люди;
+
+тебе нужен безопасный откат без переписывания истории.
+
+Пример
+bash
+git log --oneline
+git revert abc1234
+git push
+Git может открыть редактор для сообщения revert-коммита. Если хочешь сразу подтвердить:
+
+bash
+git revert --no-edit abc1234
+Когда не использовать: если нужно просто переделать последний локальный коммит — тогда обычно удобнее git reset --soft HEAD~1, но это уже более рискованная операция.
+
+revert — самый безопасный способ отменить уже опубликованный коммит, потому что он добавляет новый коммит, а не переписывает существующую историю.
+
+14. git stash
+bash
+git stash
+Что делает: временно прячет твои незакоммиченные изменения и возвращает рабочую папку к состоянию последнего коммита.
+
+Когда использовать: ты посреди работы, но нужно срочно переключиться на другую ветку или починить баг, а коммитить недоделанный код не хочется.
+
+Сценарий
+Ты правишь model.py:
+
+bash
+git status
+# modified: model.py
+Вдруг надо срочно перейти на main:
+
+bash
+git stash
+git switch main
+# чинишь баг
+git switch feature/model-training
+git stash pop
+После git stash изменения не теряются — они сохраняются в отдельном хранилище stash.
+
+Полезные варианты:
+
+bash
+git stash list
+git stash push -m "WIP: feature engineering"
+git stash show
+git stash apply
+git stash drop
+Команда	Что делает
+git stash	Спрятать текущие незакоммиченные изменения
+git stash list	Показать список stash
+git stash push -m "..."	Спрятать изменения с описанием
+git stash show	Показать, что лежит в последнем stash
+git stash apply	Вернуть изменения, но оставить их в stash
+git stash drop	Удалить последний stash
+
+15. git stash pop
+bash
+git stash pop
+Что делает: возвращает последний спрятанный набор изменений в текущую ветку и удаляет его из списка stash.
+
+То есть pop = «применить и убрать из временного хранилища».
+
+Когда использовать: когда ты вернулся на нужную ветку и хочешь продолжить работу с того места, где остановился.
+
+Полный сценарий
+bash
+# работаешь в feature/model-training
+git stash
+
+# переключился, сделал срочную задачу
+git switch main
+# ...работа...
+git switch feature/model-training
+
+# вернул свою недоделанную работу
+git stash pop
+Если конфликт
+bash
+git stash pop
+# CONFLICT
+Ты вручную исправляешь файлы, затем:
+
+bash
+git add файл
+git status
+Важная деталь: git stash pop применяет изменения и удаляет stash. Если хочешь применить, но сохранить stash на случай ошибки, используй:
+
+bash
+git stash apply
+Как это выглядит в реальной работе
+Обычный день
+bash
+git switch main
+git pull
+git switch -c feature/data-cleaning
+
+# работаешь
+git status
+git diff
+git add .
+git commit -m "Добавил обработку пропусков"
+git push -u origin feature/data-cleaning
+Нужно срочно переключиться
+bash
+git stash
+git switch main
+# исправляешь баг
+git add .
+git commit -m "Исправил баг в API"
+git push
+git switch feature/data-cleaning
+git stash pop
+Закоммитил плохое изменение
+bash
+git log --oneline
+git revert abc1234
+git push
+Случайно добавил файл в staging
+bash
+git restore --staged secrets.env
+Случайно испортил файл до коммита
+bash
+git restore train.py
+Порядок действий, который стоит запомнить
+bash
+git status        # что происходит?
+git diff          # что именно изменено?
+git add .         # что попадёт в коммит?
+git commit -m "…" # сохранить снимок
+git push          # отправить на GitHub
+Для веток:
+
+bash
+git switch main
+git pull
+git switch -c feature/имя
+# работаешь
+git add .
+git commit -m "…"
+git push -u origin feature/имя
+Для отката:
+
+bash
+git log --oneline
+git revert <hash>
+git push
+Для временного сохранения:
+
+bash
+git stash
+git switch другая_ветка
+# работаешь
+git switch старая_ветка
+git stash pop
+Самое главное: не бойся git status, git log --oneline и git diff. Они ничего не меняют, но всегда показывают, где ты находишься и что собираешься сделать.
